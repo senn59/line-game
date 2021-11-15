@@ -1,0 +1,27 @@
+{
+  "name": "line-game",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/senn59/line-game.git"
+  },
+  "author": "senn59",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/senn59/line-game/issues"
+  },
+  "homepage": "https://github.com/senn59/line-game#readme",
+  "dependencies": {
+    "ejs": "^3.1.6",
+    "express": "^4.17.1",
+    "nodemon": "^2.0.15"
+  }
+}
