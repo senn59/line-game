@@ -8,42 +8,41 @@ let keycodes = [37,38,39,40]
 document.addEventListener("keydown", e => {
     if (keycodes.includes(e.keyCode)) key = e.keyCode
 })
+document.addEventListener("keyup", e=>{
+    if (e.keyCode == key) key = null
+})
 //Player class
 class Line {
     constructor(x, y){
         this.x =x;
         this.y = y;
-        this.arr = [];
+        this.path = [];
         this.colors = ["red", "blue", "green"];
-        this.dimensions = 10
+        this.dimensions =4 
         this.speed = 2
-        this.currentkey = 39;
+        this.angle = 5
+        this.currentkey;
     }
     move(){
-        if (key + 2 != this.currentkey && key - 2 != this.currentkey) this.currentkey = key
-        switch (this.currentkey) {
+        this.currentkey = key
+        switch (key) {
             case 37: //left
-                this.x -= this.speed
+                this.angle -= 5
                 break;
             case 39: // right
-                this.x += this.speed 
-                break;
-            case 38: //up
-                this.y -= this.speed 
-                break;
-            case 40: //down
-                this.y += this.speed
+                this.angle += 5
                 break;
         }
-        setTimeout(() => {}, 1000);
-        
     }
 
     update(){
         let ctx = playField.context;
-
+        this.x += (2*1) * Math.cos(Math.PI/180 * this.angle)
+        this.y += (2*1) * Math.sin(Math.PI/180 * this.angle)
+        this.path.push([this.x,this.y]);
         ctx.fillStyle = "red";
         ctx.fillRect(this.x,this.y,this.dimensions,this.dimensions)
+        console.log(this.angle)
     }
 }
 //start game function
@@ -67,6 +66,5 @@ let playField = {
 function gameLoop() {
     player.move(key)
     player.update();
-    //console.log(player.x)
 }
 startGame()
