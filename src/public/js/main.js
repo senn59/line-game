@@ -1,16 +1,12 @@
-//declaring variables
+//init variables
 let player;
 let key;
-let gameSpeed = 1;
-let fps = 20;
+let gameSpeed = 20;
 let gameDimensions = 550;
 let keycodes = [37,38,39,40]
-document.addEventListener("keydown", e => {
-    if (keycodes.includes(e.keyCode)) key = e.keyCode
-})
-document.addEventListener("keyup", e=>{
-    if (e.keyCode == key) key = null
-})
+//record keys
+document.addEventListener("keydown", e => {if (keycodes.includes(e.keyCode)) key = e.keyCode});
+document.addEventListener("keyup", e=>{if (e.keyCode == key) key = null});
 //Player class
 class Line {
     constructor(x, y){
@@ -18,31 +14,49 @@ class Line {
         this.y = y;
         this.path = [];
         this.colors = ["red", "blue", "green"];
-        this.dimensions =4 
-        this.speed = 2
-        this.angle = 5
+        this.dimensions =4;
+        this.speed = 2;
+        this.angle = 5;
         this.currentkey;
     }
     move(){
-        this.currentkey = key
+        this.currentkey = key;
         switch (key) {
             case 37: //left
-                this.angle -= 5
+                this.angle -= 5;
                 break;
             case 39: // right
-                this.angle += 5
+                this.angle += 5;
                 break;
         }
     }
-
+    getNextPos(x, y){
+        let newX = x +(this.speed*1) * Math.cos(Math.PI/180 * this.angle);
+        let newY = y + (this.speed*1) * Math.sin(Math.PI/180 * this.angle);
+        return [newX, newY];
+    }
+    isDead(ctx){
+        //get the position it will be 2 loops ahead
+        let futurePos = this.getNextPos(this.x, this.y);
+        futurePos = this.getNextPos(futurePos[0], futurePos[1]);
+        //get the image data of said position and check its color
+        let imageData = ctx.getImageData(futurePos[0],futurePos[1],1,1).data;
+        //check if color alpa is 255
+        if (imageData[3] == 255) return true 
+        if (futurePos[0] > gameDimensions || futurePos[1] > gameDimensions) return true 
+        return false
+    }
     update(){
+        //get context and next position
         let ctx = playField.context;
-        this.x += (2*1) * Math.cos(Math.PI/180 * this.angle)
-        this.y += (2*1) * Math.sin(Math.PI/180 * this.angle)
-        this.path.push([this.x,this.y]);
-        ctx.fillStyle = "red";
-        ctx.fillRect(this.x,this.y,this.dimensions,this.dimensions)
-        console.log(this.angle)
+        let nextPos= this.getNextPos(this.x, this.y);
+        this.x = nextPos[0];
+        this.y = nextPos[1];
+        //check if the line is dead and stop the loop if so
+        if (this.isDead(ctx)) clearInterval(playField.interval);
+        //create the next part of the line
+        ctx.fillStyle = "blue";
+        ctx.fillRect(this.x,this.y,this.dimensions,this.dimensions);
     }
 }
 //start game function
@@ -55,11 +69,11 @@ function startGame() {
 let playField = {
         canvas : document.createElement("canvas"),
         start : function() {
-        this.canvas.width = 600;
-        this.canvas.height = 500;
+        this.canvas.width = gameDimensions;
+        this.canvas.height = gameDimensions;
         this.context = this.canvas.getContext("2d");
         document.body.insertBefore(this.canvas, document.body.childNodes[0]);
-        this.interval = setInterval(gameLoop, 20)
+        this.interval = setInterval(gameLoop, gameSpeed)
     }
 }
 //main game loop
