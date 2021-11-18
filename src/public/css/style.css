@@ -1,7 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro&display=swap');
 
 :root{
-    --fieldSize : 550px;
     --BGcolor: #505f67;
 }
 * {
@@ -18,8 +17,6 @@ body {
     align-items: center;
 }
 canvas {
-    /*width: var(--fieldSize);
-    height: var(--fieldSize);*/
     border: 3px solid white;
     background: black;
 }
