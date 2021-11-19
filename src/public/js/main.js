@@ -35,12 +35,12 @@ class Line {
         let newY = y + (this.speed*1) * Math.sin(Math.PI/180 * this.angle);
         return [newX, newY];
     }
-    isDead(ctx){
+    isDead(){
         //get the position it will be 2 loops ahead
         let futurePos = this.getNextPos(this.x, this.y);
         futurePos = this.getNextPos(futurePos[0], futurePos[1]);
         //get the image data of said position and check its color
-        let imageData = ctx.getImageData(futurePos[0],futurePos[1],1,1).data;
+        let imageData = this.ctx.getImageData(futurePos[0],futurePos[1],1,1).data;
         //check if color alpa is 255
         if (imageData[3] == 255) return true 
         if (futurePos[0] > gameDimensions || futurePos[1] > gameDimensions) return true 
@@ -48,15 +48,15 @@ class Line {
     }
     update(){
         //get context and next position
-        let ctx = playField.context;
+        this.ctx = playField.context;
         let nextPos= this.getNextPos(this.x, this.y);
         this.x = nextPos[0];
         this.y = nextPos[1];
         //check if the line is dead and stop the loop if so
-        if (this.isDead(ctx)) clearInterval(playField.interval);
+        if (this.isDead()) clearInterval(playField.interval);
         //create the next part of the line
-        ctx.fillStyle = "blue";
-        ctx.fillRect(this.x,this.y,this.dimensions,this.dimensions);
+        this.ctx.fillStyle = "blue";
+        this.ctx.fillRect(this.x,this.y,this.dimensions,this.dimensions);
     }
 }
 //start game function
@@ -64,6 +64,11 @@ function startGame() {
     playField.start();
     player = new Line(110, 30) 
     player.update()
+    player2 = new Line(30, 250)
+    player2.update()
+}
+function stopGame(){
+    clearInterval(playField.interval);
 }
 //init playing field
 let playField = {
