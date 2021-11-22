@@ -1,26 +1,44 @@
+//const { Socket } = require("socket.io");
+
 //init variables
 let player;
 let key;
-let gameSpeed = 20;
 let gameDimensions = 550;
 let keycodes = [37,38,39,40]
+var playing; 
+var socket = io();
+let playerID;
+//assign playerID
+socket.on("playerInfo", (msg) => {
+    playerID = msg.playerID 
+    console.log(socket.id)
+    console.log(msg)
+    player = new Line(msg.color) 
+    player.update()
+})
+socket.on("playerConnection", (msg) => {
+    console.log(`player ${msg} connected`)
+})
 //record keys
 document.addEventListener("keydown", e => {if (keycodes.includes(e.keyCode)) key = e.keyCode});
 document.addEventListener("keyup", e=>{if (e.keyCode == key) key = null});
 //Player class
 class Line {
-    constructor(x, y){
-        this.x =x;
-        this.y = y;
+    constructor(color){
+        this.x = this.y = this.getRandomInt(30, gameDimensions - 30);
+        this.y = this.getRandomInt(30, gameDimensions - 30);
         this.path = [];
-        this.colors = ["red", "blue", "green"];
+        this.color = color
         this.dimensions =4;
         this.speed = 2;
-        this.angle = 5;
-        this.currentkey;
+        this.angle = this.getRandomInt(5, 70) * 5
+    }
+    getRandomInt(min, max) {
+        min = Math.ceil(min);
+        max = Math.floor(max);
+        return Math.floor(Math.random() * (max - min + 1)) + min;
     }
     move(){
-        this.currentkey = key;
         switch (key) {
             case 37: //left
                 this.angle -= 5;
@@ -31,8 +49,8 @@ class Line {
         }
     }
     getNextPos(x, y){
-        let newX = x +(this.speed*1) * Math.cos(Math.PI/180 * this.angle);
-        let newY = y + (this.speed*1) * Math.sin(Math.PI/180 * this.angle);
+        let newX = x +this.speed * Math.cos(Math.PI/180 * this.angle);
+        let newY = y + this.speed * Math.sin(Math.PI/180 * this.angle);
         return [newX, newY];
     }
     isDead(){
@@ -53,22 +71,12 @@ class Line {
         this.x = nextPos[0];
         this.y = nextPos[1];
         //check if the line is dead and stop the loop if so
-        if (this.isDead()) clearInterval(playField.interval);
+        if (this.isDead()) playing = false; 
         //create the next part of the line
-        this.ctx.fillStyle = "blue";
+        this.ctx.fillStyle = this.color;
         this.ctx.fillRect(this.x,this.y,this.dimensions,this.dimensions);
+        socket.emit("coords", {playerID: playerID, x: this.x, y: this.y}); 
     }
-}
-//start game function
-function startGame() {
-    playField.start();
-    player = new Line(110, 30) 
-    player.update()
-    player2 = new Line(30, 250)
-    player2.update()
-}
-function stopGame(){
-    clearInterval(playField.interval);
 }
 //init playing field
 let playField = {
@@ -78,12 +86,23 @@ let playField = {
         this.canvas.height = gameDimensions;
         this.context = this.canvas.getContext("2d");
         document.body.insertBefore(this.canvas, document.body.childNodes[0]);
-        this.interval = setInterval(gameLoop, gameSpeed)
+    }
+}
+playField.start()
+playing = true;
+//start game function
+function stopGame(){
+    playing = false
+}
+function startLoop(){
+    let w = new Worker("/js/webworker.js")
+    w.onmessage = () => {
+        if (playing) gameLoop()
     }
 }
 //main game loop
 function gameLoop() {
-    player.move(key)
+    player.move()
     player.update();
 }
-startGame()
+//startLoop()

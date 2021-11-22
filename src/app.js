@@ -6,7 +6,7 @@ const server= http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
 
-let playerCount = 0;
+let playerID= 0;
 //configuration
 app.set("view engine", "ejs")
 app.use(express.static(__dirname + "/public"));
@@ -17,17 +17,27 @@ app.get('/', (req, res, next) => {
     res.render("game")
 })
 //sockets
+let players = {};
+let colors = ["red", "green", "blue"]
 io.on("connection", (socket) => {
-    playerCount++
-    io.emit("playerConnection", playerCount)
-    console.log("user connected")
-    console.log(playerCount)
+    playerID++
+    players[socket.id] = {
+        playerID: playerID,
+        color: "blue"
+    } 
+    console.log(players)
+    socket.emit("playerInfo", {playerID: playerID, color: players[socket.id].color})
+    console.log(players[socket.id].color)
+    socket.broadcast.emit("playerConnection", playerID)
+    socket.on("coords", (x, y) => {
+        //console.log(x, y)
+        //console.log(playerID)
+    })
     //disconnect handler
     socket.on("disconnect", () => {
-        playerCount--
-        io.emit("playerConnection", playerCount)
-        console.log("user disconnected");
-        console.log(playerCount)
+        socket.broadcast.emit("playerDisconnection")
+        delete players[socket.id]
+        playerID--
     })
 })
 //log requests

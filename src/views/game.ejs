@@ -11,17 +11,5 @@
 <body>
     <div id="connected"></div>
     <script src="/js/main.js"></script>
-    <script>
-        var socket = io();
-        socket.emit("msg", "hello")
-        socket.on("msg", function(msg){
-            console.log(msg)
-        })
-        socket.on("playerConnection", function(pCount){
-            document.getElementById("connected").innerHTML = `${pCount} players connected`
-            //if (pCount ==2) return startGame()
-            //return stopGame()
-        })
-    </script>
 </body>
 </html>
