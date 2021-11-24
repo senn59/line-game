@@ -8,13 +8,18 @@ let keycodes = [37,38,39,40]
 var playing; 
 var socket = io();
 let playerID;
+let socketID;
+let playerlist = {};
 //assign playerID
 socket.on("playerInfo", (msg) => {
     playerID = msg.playerID 
-    console.log(socket.id)
-    console.log(msg)
     player = new Line(msg.color) 
     player.update()
+})
+socket.on("playerList", (msg) => {
+    playerlist = msg
+    delete playerlist[socket.id]
+    console.log(playerlist)
 })
 socket.on("playerConnection", (msg) => {
     console.log(`player ${msg} connected`)
@@ -105,4 +110,4 @@ function gameLoop() {
     player.move()
     player.update();
 }
-//startLoop()
+startLoop()

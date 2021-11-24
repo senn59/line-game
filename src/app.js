@@ -26,9 +26,13 @@ io.on("connection", (socket) => {
         color: "blue"
     } 
     console.log(players)
+    io.emit("playerList",players);
+    //send playerinfo to the player that connected
     socket.emit("playerInfo", {playerID: playerID, color: players[socket.id].color})
     console.log(players[socket.id].color)
+    //signal the other players that a new connection was made
     socket.broadcast.emit("playerConnection", playerID)
+    //coords hangler
     socket.on("coords", (x, y) => {
         //console.log(x, y)
         //console.log(playerID)
@@ -51,7 +55,6 @@ function logger(req, res, next){
     console.log(log)
     next()
 }
-
 //Start app
 server.listen(port, () => {
     console.log(`listening at http://localhost:${port}`)
