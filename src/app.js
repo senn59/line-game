@@ -1,11 +1,11 @@
 const express = require('express')
-const port = 3000
+const port =3000 
 const app = express()
 const http = require("http");
 const server= http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
-
+const ip = "localhost";
 let playerID= 0;
 //configuration
 app.set("view engine", "ejs")
@@ -33,9 +33,10 @@ io.on("connection", (socket) => {
     //signal the other players that a new connection was made
     socket.broadcast.emit("playerConnection", playerID)
     //coords hangler
-    socket.on("coords", (x, y) => {
+    socket.on("coords", (msg) => {
         //console.log(x, y)
         //console.log(playerID)
+        socket.broadcast.emit("coords", {x: msg.x, y: msg.y})
     })
     //disconnect handler
     socket.on("disconnect", () => {
@@ -56,7 +57,7 @@ function logger(req, res, next){
     next()
 }
 //Start app
-server.listen(port, () => {
-    console.log(`listening at http://localhost:${port}`)
+server.listen(port, ip , () => {
+    console.log(`listening at http://${ip}:${port}`)
 })
 
