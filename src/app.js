@@ -5,7 +5,7 @@ const http = require("http");
 const server= http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
-const ip = "localhost";
+const ip = ".16.128.255";
 let playerID= 0;
 //configuration
 app.set("view engine", "ejs")
@@ -57,7 +57,7 @@ function logger(req, res, next){
     next()
 }
 //Start app
-server.listen(port, ip , () => {
+server.listen(port,  () => {
     console.log(`listening at http://${ip}:${port}`)
 })
 

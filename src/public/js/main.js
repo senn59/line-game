@@ -88,7 +88,8 @@ class Line extends baseLine {
         let imageData = this.ctx.getImageData(futurePos[0],futurePos[1],1,1).data;
         //check if color alpa is 255
         if (imageData[3] == 255) return true 
-        if (futurePos[0] > gameDimensions || futurePos[1] > gameDimensions) return true 
+        if (futurePos[0] > gameDimensions || futurePos[0] < 0) return true 
+        if (futurePos[1] > gameDimensions || futurePos[1] < 0) return true 
         return false
     }
     update(){
