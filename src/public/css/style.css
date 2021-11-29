@@ -22,8 +22,8 @@ canvas {
 }
 #connected {
     color: white;
-    font-size: 24px;
+    font-size: 18px;
     position: absolute;
     top: 50px;
-    left: 50px;
+    left: 0px;
 }
