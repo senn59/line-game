@@ -1,12 +1,19 @@
+const { count } = require('console');
 const express = require('express')
+
 const port =3000 
 const app = express()
 const http = require("http");
 const server= http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
-const ip = ".16.128.255";
+
+//initial variables
+const ip = "localhost";
 let playerID= 0;
+let playing = false
+let timer = null
+let countdown = 3
 //configuration
 app.set("view engine", "ejs")
 app.use(express.static(__dirname + "/public"));
@@ -26,17 +33,36 @@ io.on("connection", (socket) => {
         color: "blue"
     } 
     console.log(players)
-    io.emit("playerList",players);
+    //game countdown
+    if (playerID >= 2){
+        //if (playing == true) return
+        if (timer){
+            clearInterval(timer)
+            countdown = 3
+        } 
+        timer = setInterval(() => {
+            io.emit("countdown", {count: countdown})
+            console.log(countdown)
+            countdown--
+            if (countdown < 0) {
+                clearInterval(timer)
+                playing = true
+            }
+        }, 1000);
+
+        io.emit()
+    }
     //send playerinfo to the player that connected
     socket.emit("playerInfo", {playerID: playerID, color: players[socket.id].color})
-    console.log(players[socket.id].color)
+    socket.emit("playerList",players);
+    socket.broadcast.emit("playerList", players)
     //signal the other players that a new connection was made
     socket.broadcast.emit("playerConnection", playerID)
-    //coords hangler
+    //coords handler 
     socket.on("coords", (msg) => {
         //console.log(x, y)
         //console.log(playerID)
-        socket.broadcast.emit("coords", {x: msg.x, y: msg.y})
+        socket.broadcast.emit("coords", {socketID: socket.id, x: msg.x, y: msg.y})
     })
     //disconnect handler
     socket.on("disconnect", () => {

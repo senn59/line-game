@@ -21,15 +21,24 @@ socket.on("playerInfo", (msg) => {
     console.log("test")
 })
 socket.on("playerList", (msg) => {
+    delete msg[socket.id]
     playerlist = msg
-    delete playerlist[socket.id]
-    console.log(playerlist)
+    for ([key, val] of Object.entries(playerlist)){
+        val.line = new baseLine("green")
+        val.line.updatePos()
+        console.log(val)
+    }
 })
+//update player
 socket.on("coords", (msg) => {
-    player2_x = msg.x
-    player2_y = msg.y
-    console.log(msg.x )
-    
+    //player2.updatePos(msg.x, msg.y)
+    console.log(msg)
+    playerlist[msg.socketID].line.updatePos(msg.x, msg.y)
+})
+socket.on("countdown", (msg) => {
+    if (msg.count == 0) {
+        startLoop()
+    }
 })
 socket.on("playerConnection", (msg) => {
     console.log(`player ${msg} connected`)
@@ -94,18 +103,17 @@ class Line extends baseLine {
     }
     update(){
         if (this.playing == true){
-        //get context and next position
-        this.ctx = playField.context;
-        let nextPos= this.getNextPos(this.x, this.y);
-        this.x = nextPos[0];
-        this.y = nextPos[1];
-        //check if the line is dead and stop the loop if so
-        if (this.isDead()) this.playing = false; 
-        //create the next part of the line
-        this.ctx.fillStyle = this.color;
-        this.ctx.fillRect(this.x,this.y,this.dimensions,this.dimensions);
-        socket.emit("coords", {socketID: socketID, x: this.x, y: this.y}); 
-
+            //get context and next position
+            this.ctx = playField.context;
+            let nextPos= this.getNextPos(this.x, this.y);
+            this.x = nextPos[0];
+            this.y = nextPos[1];
+            //check if the line is dead and stop the loop if so
+            if (this.isDead()) this.playing = false; 
+            //create the next part of the line
+            this.ctx.fillStyle = this.color;
+            this.ctx.fillRect(this.x,this.y,this.dimensions,this.dimensions);
+            socket.emit("coords", {socketID: socketID, x: this.x, y: this.y}); 
         }
     }
 }
@@ -136,7 +144,4 @@ function startLoop(){
 function gameLoop() {
     player.move()
     player.update();
-    testx += 2
-    player2.updatePos(player2_x, player2_y)
 }
-startLoop()
