@@ -34,10 +34,12 @@ io.on("connection", (socket) => {
     } 
     //send playerinfo to the player that connected
     socket.emit("playerInfo", {playerID: playerID, color: players[socket.id].color})
+    //get starting coords of the player
     socket.on("startingCoords", (msg) => {
         players[socket.id].startx = msg.startx
         players[socket.id].starty = msg.starty
         console.log(players[socket.id])
+        //send list of players to everyone
         io.emit("playerList", players)
     })
     console.log(players)
