@@ -9,7 +9,7 @@ const { Server } = require("socket.io");
 const io = new Server(server);
 
 //initial variables
-const ip = "localhost";
+const ips = ["172.16.128.146", "localhost"];
 let playerID= 0;
 let playing = false
 let timer = null
@@ -32,6 +32,14 @@ io.on("connection", (socket) => {
         playerID: playerID,
         color: "blue"
     } 
+    //send playerinfo to the player that connected
+    socket.emit("playerInfo", {playerID: playerID, color: players[socket.id].color})
+    socket.on("startingCoords", (msg) => {
+        players[socket.id].startx = msg.startx
+        players[socket.id].starty = msg.starty
+        console.log(players[socket.id])
+        io.emit("playerList", players)
+    })
     console.log(players)
     //game countdown
     if (playerID >= 2){
@@ -49,13 +57,7 @@ io.on("connection", (socket) => {
                 playing = true
             }
         }, 1000);
-
-        io.emit()
     }
-    //send playerinfo to the player that connected
-    socket.emit("playerInfo", {playerID: playerID, color: players[socket.id].color})
-    socket.emit("playerList",players);
-    socket.broadcast.emit("playerList", players)
     //signal the other players that a new connection was made
     socket.broadcast.emit("playerConnection", playerID)
     //coords handler 
@@ -83,7 +85,7 @@ function logger(req, res, next){
     next()
 }
 //Start app
-server.listen(port,  () => {
-    console.log(`listening at http://${ip}:${port}`)
+server.listen(port, ips[1],  () => {
+    console.log(`listening at http://${ips[1]}:${port}`)
 })
 

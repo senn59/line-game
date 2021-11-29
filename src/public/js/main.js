@@ -1,9 +1,9 @@
 //const { Socket } = require("socket.io");
-
+let playerlistDisplay = document.getElementById("connected")
 //init variables
 let player;
 let key;
-let gameDimensions = 550;
+let gameDimensions = 500;
 let keycodes = [37,38,39,40]
 var playing; 
 var socket = io();
@@ -16,23 +16,34 @@ let player2_x, player2_y
 socket.on("playerInfo", (msg) => {
     playerID = msg.playerID 
     player = new Line(msg.color) 
-    player2 = new baseLine("green")
     player.update()
+    socket.emit("startingCoords", {startx: player.x, starty: player.y})
     console.log("test")
 })
 socket.on("playerList", (msg) => {
+    playerlistDisplay.innerHTML = "";
     delete msg[socket.id]
+    //add this player to visual playerlist
+    let node = document.createElement("li")
+    node.appendChild(document.createTextNode(socket.id))
+    playerlistDisplay.appendChild(node)
+
     playerlist = msg
     for ([key, val] of Object.entries(playerlist)){
         val.line = new baseLine("green")
-        val.line.updatePos()
-        console.log(val)
+        val.line.updatePos(val.startx, val.starty)
+        console.log(val.startx, val.starty)
+        //add player to visual playerlist
+        let node = document.createElement("li")
+        node.appendChild(document.createTextNode(key))
+        playerlistDisplay.appendChild(node)
+        //
     }
+    console.log(playerlist)
 })
 //update player
 socket.on("coords", (msg) => {
     //player2.updatePos(msg.x, msg.y)
-    console.log(msg)
     playerlist[msg.socketID].line.updatePos(msg.x, msg.y)
 })
 socket.on("countdown", (msg) => {
