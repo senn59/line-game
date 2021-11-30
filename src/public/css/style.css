@@ -21,9 +21,11 @@ canvas {
     background: black;
 }
 #connected {
-    color: white;
     font-size: 18px;
     position: absolute;
     top: 50px;
     left: 0px;
+}
+li {
+    color: red;
 }

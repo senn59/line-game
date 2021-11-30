@@ -1,4 +1,3 @@
-const { count } = require('console');
 const express = require('express')
 
 const port =3000 
@@ -13,7 +12,7 @@ const ips = ["172.16.128.146", "localhost"];
 let playerID= 0;
 let playing = false
 let timer = null
-let countdown = 3
+let countdown = 2
 //configuration
 app.set("view engine", "ejs")
 app.use(express.static(__dirname + "/public"));
@@ -30,7 +29,8 @@ io.on("connection", (socket) => {
     playerID++
     players[socket.id] = {
         playerID: playerID,
-        color: "blue"
+        color: "blue",
+        ready: false
     } 
     //send playerinfo to the player that connected
     socket.emit("playerInfo", {playerID: playerID, color: players[socket.id].color})
@@ -43,23 +43,26 @@ io.on("connection", (socket) => {
         io.emit("playerList", players)
     })
     console.log(players)
-    //game countdown
-    if (playerID >= 2){
-        //if (playing == true) return
-        if (timer){
-            clearInterval(timer)
-            countdown = 3
-        } 
-        timer = setInterval(() => {
-            io.emit("countdown", {count: countdown})
-            console.log(countdown)
-            countdown--
-            if (countdown < 0) {
+    //handle ready player
+    socket.on("ready", (msg) => {
+        players[socket.id].ready = msg.status
+        io.emit("playerList", players)
+        if (Object.values(players).every(val => val.ready)){
+            if (timer) {
                 clearInterval(timer)
-                playing = true
+                countdown = 2
             }
-        }, 1000);
-    }
+            timer = setInterval(() => {
+                io.emit("countdown", {count: countdown})
+                console.log(countdown)
+                countdown--
+                if (countdown < 0) {
+                    clearInterval(timer)
+                    playing = true
+                }
+            }, 1000);
+        }
+    })
     //signal the other players that a new connection was made
     socket.broadcast.emit("playerConnection", playerID)
     //coords handler 
@@ -70,7 +73,7 @@ io.on("connection", (socket) => {
     })
     //disconnect handler
     socket.on("disconnect", () => {
-        socket.broadcast.emit("playerDisconnection")
+        socket.broadcast.emit("playerDC", {socketID: socket.id})
         delete players[socket.id]
         playerID--
     })
