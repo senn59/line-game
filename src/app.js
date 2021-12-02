@@ -24,34 +24,48 @@ app.get('/', (req, res, next) => {
 })
 //sockets
 let players = {};
-let colors = ["red", "green", "blue"]
+let colors = {
+    red: {taken: false, id: 1},
+    green: {taken: false, id: 2},
+    blue: {taken: false, id: 3},
+    yellow: {taken: false, id: 4},
+    cyan: {taken: false, id: 5},
+}
+function getColor(){
+    for ([key, val] of Object.entries(colors)){
+        if (!val.taken) {
+            val.taken = true; 
+            return [val.id, key] 
+        }
+    }
+}
 io.on("connection", (socket) => {
+    playerInfo = getColor()
     playerID++
     players[socket.id] = {
-        playerID: playerID,
-        color: "blue",
+        playerID: playerInfo[0],
+        color: playerInfo[1],
         ready: false
-    } 
+    }
     //send playerinfo to the player that connected
     socket.emit("playerInfo", {playerID: playerID, color: players[socket.id].color})
     //get starting coords of the player
     socket.on("startingCoords", (msg) => {
         players[socket.id].startx = msg.startx
         players[socket.id].starty = msg.starty
-        console.log(players[socket.id])
         //send list of players to everyone
         io.emit("playerList", players)
     })
-    console.log(players)
     //handle ready player
     socket.on("ready", (msg) => {
         players[socket.id].ready = msg.status
         io.emit("playerList", players)
+        if (timer) {
+            clearInterval(timer)
+            countdown = 2
+        }
         if (Object.values(players).every(val => val.ready)){
-            if (timer) {
-                clearInterval(timer)
-                countdown = 2
-            }
+            console.log("Countdown started!")
             timer = setInterval(() => {
                 io.emit("countdown", {count: countdown})
                 console.log(countdown)
@@ -74,6 +88,7 @@ io.on("connection", (socket) => {
     //disconnect handler
     socket.on("disconnect", () => {
         socket.broadcast.emit("playerDC", {socketID: socket.id})
+        colors[players[socket.id].color].taken = false;
         delete players[socket.id]
         playerID--
     })
