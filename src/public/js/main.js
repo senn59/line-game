@@ -14,6 +14,7 @@ let playerList = []
 let testx = 5
 let player2_x, player2_y
 let readyStatus= false
+let webWorker
 
 //ready function
 const ready = () => {
@@ -77,7 +78,11 @@ socket.on("coords", (msg) => {
 socket.on("countdown", (msg) => {
     if (msg.count == 0) {
         startLoop()
+        document.getElementById("ready_btn").style.display = "none"
     }
+})
+socket.on("gameOver", () => {
+
 })
 socket.on("playerConnection", (msg) => {
     console.log(`player ${msg} connected`)
@@ -152,7 +157,10 @@ class Line extends baseLine {
             //create the next part of the line
             this.ctx.fillStyle = this.color;
             this.ctx.fillRect(this.x,this.y,this.dimensions,this.dimensions);
-            socket.emit("coords", {socketID: socketID, x: this.x, y: this.y}); 
+            socket.emit("coords", {x: this.x, y: this.y}); 
+        } else {
+            socket.emit("dead")
+            stopLoop()
         }
     }
 }
@@ -174,10 +182,13 @@ function stopGame(){
     playing = false
 }
 function startLoop(){
-    let w = new Worker("/js/webworker.js")
-    w.onmessage = () => {
+    webWorker = new Worker("/js/webworker.js")
+    webWorker.onmessage = () => {
         if (playing) gameLoop()
     }
+}
+function stopLoop(params) {
+    webWorker.terminate()
 }
 //main game loop
 function gameLoop() {

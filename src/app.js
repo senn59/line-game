@@ -45,7 +45,8 @@ io.on("connection", (socket) => {
     players[socket.id] = {
         playerID: playerInfo[0],
         color: playerInfo[1],
-        ready: false
+        ready: false,
+        dead: false
     }
     //send playerinfo to the player that connected
     socket.emit("playerInfo", {playerID: playerID, color: players[socket.id].color})
@@ -75,6 +76,13 @@ io.on("connection", (socket) => {
                     playing = true
                 }
             }, 1000);
+        }
+    })
+    socket.on("dead", () => {
+        players[socket.id].dead = true;
+        if (Object.values(players).every(val=> val.dead)){
+            console.log("Game over")
+            io.emit("gameOver")
         }
     })
     //signal the other players that a new connection was made
