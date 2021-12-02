@@ -21,13 +21,12 @@ const ready = () => {
         socket.emit("ready", {status: true})
         player.ready = true 
         console.log(player.ready)
-        document.getElementById(socket.id).innerHTML = socket.id + " | " + player.ready
-        document.getElementById(socket.id).style.color = "green"
+        document.getElementById(socket.id).innerHTML = socket.id + " | READY";
         return
     }
     socket.emit("ready", {status: false})
     player.ready = false
-    document.getElementById(socket.id).style.color = "red"
+    document.getElementById(socket.id).innerHTML = socket.id
     console.log(player.ready)
 }
 socket.on("playerDC", (msg) => {
@@ -45,25 +44,27 @@ socket.on("playerInfo", (msg) => {
     let node = document.createElement("li");
     node.appendChild(document.createTextNode(socket.id));
     node.id = socket.id
+    node.style.color = player.color
     playerlistDisplay.appendChild(node)
 })
 socket.on("playerList", (msg) => {
     delete msg[socket.id]
     for ([key, val] of Object.entries(msg)){
         if (key in playerDict){
-            if (val.ready) document.getElementById(key).style.color = "green"
-            else document.getElementById(key).style.color = "red"
-            return
+            console.log(playerDict)
+            if (val.ready) document.getElementById(key).innerHTML = key + " | READY"
+            else document.getElementById(key).innerHTML = key
+            continue
         } 
-        console.log("test")
         playerDict[key] = val
-        playerDict[key].line = new baseLine("green")
+        playerDict[key].line = new baseLine(playerDict[key].color)
         playerDict[key].line.updatePos(playerDict[key].startx, playerDict[key].starty)
         console.log(playerDict[key].startx, playerDict[key].starty)
         //add player to visual playerlist
         let node = document.createElement("li")
         node.appendChild(document.createTextNode(key)) 
         node.id = key
+        node.style.color = playerDict[key].color
         playerlistDisplay.appendChild(node)
         //
     }
@@ -71,7 +72,6 @@ socket.on("playerList", (msg) => {
 })
 //update player
 socket.on("coords", (msg) => {
-    //player2.updatePos(msg.x, msg.y)
     playerDict[msg.socketID].line.updatePos(msg.x, msg.y)
 })
 socket.on("countdown", (msg) => {
@@ -105,6 +105,7 @@ class baseLine {
 class Line extends baseLine {
     constructor(color, dimensions, speed, playing, ready){
         super(color, dimensions, speed, playing)
+        this.dead = false
         this.x = this.y = this.getRandomInt(50, gameDimensions - 50);
         this.y = this.getRandomInt(50, gameDimensions - 50);
         this.angle = this.getRandomInt(5, 70) * 5
@@ -136,20 +137,18 @@ class Line extends baseLine {
         //get the image data of said position and check its color
         let imageData = this.ctx.getImageData(futurePos[0],futurePos[1],1,1).data;
         //check if color alpa is 255
-        if (imageData[3] == 255) return true 
-        if (futurePos[0] > gameDimensions || futurePos[0] < 0) return true 
-        if (futurePos[1] > gameDimensions || futurePos[1] < 0) return true 
-        return false
+        if (imageData[3] == 255) return this.dead = true
+        if (futurePos[0] > gameDimensions || futurePos[0] < 0) return this.dead = true
+        if (futurePos[1] > gameDimensions || futurePos[1] < 0) return this.dead = true
     }
     update(){
-        if (this.playing == true){
+        if (!this.dead){
             //get context and next position
             this.ctx = playField.context;
             let nextPos= this.getNextPos(this.x, this.y);
             this.x = nextPos[0];
             this.y = nextPos[1];
-            //check if the line is dead and stop the loop if so
-            if (this.isDead()) this.playing = false; 
+            this.isDead()
             //create the next part of the line
             this.ctx.fillStyle = this.color;
             this.ctx.fillRect(this.x,this.y,this.dimensions,this.dimensions);
