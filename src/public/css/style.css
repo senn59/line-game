@@ -26,3 +26,9 @@ canvas {
     top: 50px;
     left: 0px;
 }
+#restart_btn {
+    display: none;
+}
+#win_msg_cnt{
+    display: none;
+}

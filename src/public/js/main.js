@@ -3,44 +3,41 @@ let playerlistDisplay = document.getElementById("connected")
 //init variables
 let player;
 let key;
-let gameDimensions = 500;
+let gameDimensions = 400;
 let keycodes = [37,38,39,40]
 var playing; 
 var socket = io();
-let playerID;
 let socketID;
-let playerDict = {};
+let opponents = {};
 let playerList = []
 let testx = 5
 let player2_x, player2_y
 let readyStatus= false
 let webWorker
 
-//ready function
 const ready = () => {
-    if (!player.ready){
-        socket.emit("ready", {status: true})
-        player.ready = true 
-        console.log(player.ready)
-        document.getElementById(socket.id).innerHTML = socket.id + " | READY";
-        return
-    }
-    socket.emit("ready", {status: false})
-    player.ready = false
-    document.getElementById(socket.id).innerHTML = socket.id
+    //true false switch in order to decide the player ready status
+    player.ready ? player.ready = false : player.ready = true;
+    socket.emit("ready", {status: player.ready})
     console.log(player.ready)
+    document.getElementById(socket.id).innerHTML = socket.id + " | " + player.ready
 }
+
 socket.on("playerDC", (msg) => {
-    delete playerDict[msg.socketID]
+    /*
+        refresh the board when a player disconnects
+        *other opponents get refreshed because of the opponentsRefresh function*
+    */
+    player.ctx.clearRect(0,0, gameDimensions, gameDimensions)
+    player.update()
+    delete opponents[msg.socketID]
     document.getElementById(msg.socketID).remove();
 })
 //assign playerID
 socket.on("playerInfo", (msg) => {
-    playerID = msg.playerID 
-    player = new Line(msg.color) 
+    player = new Line(msg.color, msg.playerID);
     player.update()
     socket.emit("startingCoords", {startx: player.x, starty: player.y})
-    console.log("test")
     //add this player to visual playerlist
     let node = document.createElement("li");
     node.appendChild(document.createTextNode(socket.id));
@@ -48,56 +45,58 @@ socket.on("playerInfo", (msg) => {
     node.style.color = player.color
     playerlistDisplay.appendChild(node)
 })
-socket.on("playerList", (msg) => {
+//list of opponents that all clients recieve.
+//based on this list they create new lines for the new opponents which is different for each client
+socket.on("playersRefresh", (msg) => {
     delete msg[socket.id]
     for ([key, val] of Object.entries(msg)){
-        if (key in playerDict){
-            console.log(playerDict)
-            if (val.ready) document.getElementById(key).innerHTML = key + " | READY"
-            else document.getElementById(key).innerHTML = key
-            continue
-        } 
-        playerDict[key] = val
-        playerDict[key].line = new baseLine(playerDict[key].color)
-        playerDict[key].line.updatePos(playerDict[key].startx, playerDict[key].starty)
-        console.log(playerDict[key].startx, playerDict[key].starty)
+        // continue to the next loop if the player is already registered
+        if (key in opponents) continue 
+        opponents[key] = val
+        opponents[key].line = new baseLine(opponents[key].color, opponents[key].playerID)
+        opponents[key].line.updatePos(opponents[key].startx, opponents[key].starty)
         //add player to visual playerlist
         let node = document.createElement("li")
         node.appendChild(document.createTextNode(key)) 
         node.id = key
-        node.style.color = playerDict[key].color
+        node.style.color = opponents[key].color
         playerlistDisplay.appendChild(node)
-        //
     }
-    console.log(playerDict)
 })
-//update player
+//change opponent ready status
+socket.on("playerReady", (msg) => {
+    opponents[msg.socketID].ready = msg.ready
+    document.getElementById(key).innerHTML = key + " | " + msg.ready
+})
+//update the player coordinates
 socket.on("coords", (msg) => {
-    playerDict[msg.socketID].line.updatePos(msg.x, msg.y)
+    opponents[msg.socketID].line.updatePos(msg.x, msg.y)
 })
 socket.on("countdown", (msg) => {
     if (msg.count == 0) {
         startLoop()
         document.getElementById("ready_btn").style.display = "none"
+        player.ready = false;
+        socket.emit("ready", {status: false})
     }
 })
-socket.on("gameOver", () => {
-
-})
-socket.on("playerConnection", (msg) => {
-    console.log(`player ${msg} connected`)
+socket.on("gameOver", (msg) => {
+    stopLoop();
+    document.getElementById("win_msg_cnt").style.display = "block"
+    document.getElementById("win_msg_cnt").innerHTML = msg.winner
 })
 //record keys
 document.addEventListener("keydown", e => {if (keycodes.includes(e.keyCode)) key = e.keyCode});
 document.addEventListener("keyup", e=>{if (e.keyCode == key) key = null});
 //Player class
 class baseLine {
-    constructor(color){
+    constructor(color, id){
         this.color = color
         this.dimensions =4;
         this.speed = 2;
         this.playing = true
         this.ready = false
+        this.id = id
     }
     updatePos(x, y){
         if (x > 0 && y > 0){
@@ -108,24 +107,29 @@ class baseLine {
     }
 }
 class Line extends baseLine {
-    constructor(color, dimensions, speed, playing, ready){
-        super(color, dimensions, speed, playing)
+    constructor(color, dimensions, speed, playing, ready, id){
+        super(color, dimensions, speed, playing, ready, id)
         this.dead = false
-        this.x = this.y = this.getRandomInt(50, gameDimensions - 50);
-        this.y = this.getRandomInt(50, gameDimensions - 50);
-        this.angle = this.getRandomInt(5, 70) * 5
+        this.generatePos()
     }
     getRandomInt(min, max) {
         min = Math.ceil(min);
         max = Math.floor(max);
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
+    //generate a random starting position and angle
+    generatePos(){
+        this.x = this.getRandomInt(50, gameDimensions - 50);
+        this.y = this.getRandomInt(50, gameDimensions - 50);
+        this.angle = this.getRandomInt(5, 70) * 5
+    }
     move(){
+        //increment or reduce angle based on which key is pressed down
         switch (key) {
-            case 37: //left
+            case 37: //left arrow
                 this.angle -= 5;
                 break;
-            case 39: // right
+            case 39: //right arrow
                 this.angle += 5;
                 break;
         }
@@ -142,17 +146,22 @@ class Line extends baseLine {
         //get the image data of said position and check its color
         let imageData = this.ctx.getImageData(futurePos[0],futurePos[1],1,1).data;
         //check if color alpa is 255
-        if (imageData[3] == 255) return this.dead = true
-        if (futurePos[0] > gameDimensions || futurePos[0] < 0) return this.dead = true
-        if (futurePos[1] > gameDimensions || futurePos[1] < 0) return this.dead = true
+        if (imageData[3] == 255) this.dead = true
+        if (futurePos[0] > gameDimensions || futurePos[0] < 0) this.dead = true
+        if (futurePos[1] > gameDimensions || futurePos[1] < 0) this.dead = true
+    }
+    restart(){
+        this.ctx.clearRect(0, 0, gameDimensions, gameDimensions);
+        this.dead = false;
+        this.generatePos()
+        this.update()
+        socket.emit("startingCoords", {startx: player.x, starty: player.y})
     }
     update(){
+        console.log(this.dead)
         if (!this.dead){
             //get context and next position
             this.ctx = playField.context;
-            let nextPos= this.getNextPos(this.x, this.y);
-            this.x = nextPos[0];
-            this.y = nextPos[1];
             this.isDead()
             //create the next part of the line
             this.ctx.fillStyle = this.color;
@@ -187,11 +196,14 @@ function startLoop(){
         if (playing) gameLoop()
     }
 }
-function stopLoop(params) {
+function stopLoop() {
     webWorker.terminate()
 }
 //main game loop
 function gameLoop() {
     player.move()
+    let nextPos = player.getNextPos(player.x, player.y)
+    player.x = nextPos[0]
+    player.y = nextPos[1]
     player.update();
 }
