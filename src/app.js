@@ -22,7 +22,7 @@ app.use(logger)
 
 //routing
 app.get('/', (req, res, next) => {
-    res.render("game")
+    res.render("index")
 })
 //sockets
 let players = {};

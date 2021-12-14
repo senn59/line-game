@@ -50,9 +50,8 @@ socket.on("playerInfo", (msg) => {
 socket.on("playersRefresh", (msg) => {
     delete msg[socket.id]
     for ([key, val] of Object.entries(msg)){
-        // continue to the next loop if the player is already registered
-        if (key in opponents) continue 
-        opponents[key] = val
+        if (key in opponents) continue // continue to the next loop if the player is already registered
+        opponents[key] = val // all the values of the player (color, id, start coords)
         opponents[key].line = new baseLine(opponents[key].color, opponents[key].playerID)
         opponents[key].line.updatePos(opponents[key].startx, opponents[key].starty)
         //add player to visual playerlist
@@ -80,9 +79,10 @@ socket.on("countdown", (msg) => {
         socket.emit("ready", {status: false})
     }
 })
+//if the game is over you stop the game and showcase the winner
+// TODO: implementing rounds // for now infinite rounds
 socket.on("gameOver", (msg) => {
     stopLoop();
-    document.getElementById("win_msg_cnt").style.display = "block"
     document.getElementById("win_msg_cnt").innerHTML = msg.winner
 })
 //record keys
@@ -159,18 +159,18 @@ class Line extends baseLine {
     }
     update(){
         console.log(this.dead)
-        if (!this.dead){
-            //get context and next position
-            this.ctx = playField.context;
-            this.isDead()
-            //create the next part of the line
-            this.ctx.fillStyle = this.color;
-            this.ctx.fillRect(this.x,this.y,this.dimensions,this.dimensions);
-            socket.emit("coords", {x: this.x, y: this.y}); 
-        } else {
+        if (this.dead){
             socket.emit("dead")
             stopLoop()
+            return;
         }
+        //get context and next position
+        this.ctx = playField.context;
+        this.isDead()
+        //create the next part of the line
+        this.ctx.fillStyle = this.color;
+        this.ctx.fillRect(this.x,this.y,this.dimensions,this.dimensions);
+        socket.emit("coords", {x: this.x, y: this.y}); 
     }
 }
 
@@ -186,10 +186,7 @@ let playField = {
 }
 playField.start()
 playing = true;
-//start game function
-function stopGame(){
-    playing = false
-}
+//start game function | implented webworker so that the js timer doesnt get suspended when switched off the tab
 function startLoop(){
     webWorker = new Worker("/js/webworker.js")
     webWorker.onmessage = () => {
