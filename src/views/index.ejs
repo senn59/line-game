@@ -14,25 +14,24 @@
             <input type="text" id="nickname" placeholder="Nickname">
             <button type="button" onclick="getNickname()">Enter</button>
         </form>
+        <script src="/js/main.js"></script>
     </section>
-    <script src="/js/nickname.js"></script>
 
     <section id="lobby_options">
         <form>
             <input type="text" placeholder="Room code">
-            <button type="button">Join</button>
-            <button type="button">Create</button>
+            <button type="button" onclick="joinRoom()">Join</button>
+            <button type="button" onclick="createRoom()">Create</button>
         </form>
     </section>
     <!-- 
         create this when main.js is loaded
+    -->
     <ul id="connected"></ul>
     <div id="win_msg_cnt">
         <div id="win_msg"></div>
         <button>Ok</button>
     </div>
-        <button id="ready_btn" onclick="ready()">Ready</button>
-        <script src="/js/main.js"></script>
-    -->
+    <button id="ready_btn" onclick="ready()">Ready</button>
 </body>
 </html>

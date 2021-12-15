@@ -21,7 +21,11 @@ app.use(express.static(__dirname + "/public"));
 app.use(logger)
 
 //routing
-app.get('/', (req, res, next) => {
+app.get("/", (req, res, next) => {
+    res.render("index")
+})
+app.get('/:roomcode', (req, res, next) => {
+    const roomcode = req.params.roomcode;
     res.render("index")
 })
 //sockets
