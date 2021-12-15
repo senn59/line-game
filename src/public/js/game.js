@@ -20,7 +20,7 @@ const ready = () => {
     player.ready ? player.ready = false : player.ready = true;
     socket.emit("ready", {status: player.ready})
     console.log(player.ready)
-    document.getElementById(socket.id).innerHTML = socket.id + " | " + player.ready
+    document.getElementById(socket.id).innerHTML = player.nickname + " | " + player.ready
 }
 
 socket.on("playerDC", (msg) => {
@@ -33,16 +33,16 @@ socket.on("playerDC", (msg) => {
     delete opponents[msg.socketID]
     document.getElementById(msg.socketID).remove();
 })
-//assign playerID
 socket.on("playerInfo", (msg) => {
-    player = new Line(msg.color, msg.playerID);
+    //make new line for the player
+    player = new Line(msg.color, nickname.value);
     player.update()
-    socket.emit("startingCoords", {startx: player.x, starty: player.y})
+    socket.emit("playerClientInfo", {nickname: player.nickname, startx: player.x, starty: player.y})
     //add this player to visual playerlist
     let node = document.createElement("li");
-    node.appendChild(document.createTextNode(socket.id));
-    node.id = socket.id
-    node.style.color = player.color
+    node.id = socket.id 
+    node.appendChild(document.createTextNode(player.nickname))
+    node.style.setProperty("--background", msg.color)
     playerlistDisplay.appendChild(node)
 })
 //list of opponents that all clients recieve.
@@ -52,20 +52,20 @@ socket.on("playersRefresh", (msg) => {
     for ([key, val] of Object.entries(msg)){
         if (key in opponents) continue // continue to the next loop if the player is already registered
         opponents[key] = val // all the values of the player (color, id, start coords)
-        opponents[key].line = new baseLine(opponents[key].color, opponents[key].playerID)
+        opponents[key].line = new baseLine(opponents[key].color, opponents[key].nickname)
         opponents[key].line.updatePos(opponents[key].startx, opponents[key].starty)
         //add player to visual playerlist
         let node = document.createElement("li")
-        node.appendChild(document.createTextNode(key)) 
         node.id = key
-        node.style.color = opponents[key].color
+        node.appendChild(document.createTextNode(opponents[key].nickname))
+        node.style.setProperty("--background", opponents[key].color)
         playerlistDisplay.appendChild(node)
     }
 })
 //change opponent ready status
 socket.on("playerReady", (msg) => {
     opponents[msg.socketID].ready = msg.ready
-    document.getElementById(key).innerHTML = key + " | " + msg.ready
+    document.getElementById(msg.socketID).innerHTML = opponents[msg.socketID].nickname + " | " + msg.ready
 })
 //update the player coordinates
 socket.on("coords", (msg) => {
@@ -90,13 +90,13 @@ document.addEventListener("keydown", e => {if (keycodes.includes(e.keyCode)) key
 document.addEventListener("keyup", e=>{if (e.keyCode == key) key = null});
 //Player class
 class baseLine {
-    constructor(color, id){
+    constructor(color, nickname){
+        this.nickname = nickname
         this.color = color
         this.dimensions =4;
         this.speed = 2;
         this.playing = true
         this.ready = false
-        this.id = id
     }
     updatePos(x, y){
         if (x > 0 && y > 0){
@@ -107,8 +107,8 @@ class baseLine {
     }
 }
 class Line extends baseLine {
-    constructor(color, dimensions, speed, playing, ready, id){
-        super(color, dimensions, speed, playing, ready, id)
+    constructor(nickname, color, dimensions, speed, playing, ready, id){
+        super(nickname, color, dimensions, speed, playing, ready, id)
         this.dead = false
         this.generatePos()
     }

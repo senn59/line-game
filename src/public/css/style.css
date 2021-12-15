@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro&display=swap');
 
 :root{
-    --BGcolor: #505f67;
+    --BGcolor: #2D383E;
 }
 * {
     border-style: border-box;
@@ -26,6 +26,22 @@ canvas {
     position: absolute;
     top: 50px;
     left: 0px;
+    counter-reset: item;
+    list-style: none;
+    color: white;
+}
+#connected li {
+    counter-increment: item;
+    margin-bottom: 10px;
+}
+#connected li::before {
+    content: counter(item);
+    margin-right: 10px;
+    background: var(--background);
+    color: black;
+    width: 25px;
+    text-align: center;
+    display: inline-block;
 }
 #restart_btn {
     display: none;

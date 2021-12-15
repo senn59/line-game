@@ -31,18 +31,18 @@ app.get('/:roomcode', (req, res, next) => {
 //sockets
 let players = {};
 let colors = {
-    red: {taken: false, id: 1},
-    green: {taken: false, id: 2},
-    blue: {taken: false, id: 3},
-    yellow: {taken: false, id: 4},
-    cyan: {taken: false, id: 5},
+    red: false,
+    yellow: false,
+    blue: false,
+    green: false,
+    cyan: false
 }
 function getColor(){
     //pick a color that isnt taken and return that color
     for ([key, val] of Object.entries(colors)){
-        if (!val.taken) {
-            val.taken = true; 
-            return [val.id, key] 
+        if (!val){
+            colors[key] = true
+            return key
         }
     }
 }
@@ -60,17 +60,16 @@ io.on("connection", (socket) => {
         countdown = 2
     } 
     //init player object
-    playerInfo = getColor()
     players[socket.id] = {
-        playerID: playerInfo[0],
-        color: playerInfo[1],
+        color: getColor(),
         ready: false,
         dead: false
     }
     //send the playerinfo generated from the backend to the player that connected
-    socket.emit("playerInfo", {playerID: players[socket.id].playerID, color: players[socket.id].color})
-    socket.on("startingCoords", (msg) => {
-        //get starting coords of the player
+    socket.emit("playerInfo", players[socket.id])
+    socket.on("playerClientInfo", (msg) => {
+        //get starting coords & player nickname
+        players[socket.id].nickname = msg.nickname
         players[socket.id].startx = msg.startx
         players[socket.id].starty = msg.starty
         //send list of players to everyone
@@ -122,7 +121,7 @@ io.on("connection", (socket) => {
     //disconnect handler
     socket.on("disconnect", () => {
         socket.broadcast.emit("playerDC", {socketID: socket.id})
-        colors[players[socket.id].color].taken = false;
+        colors[players[socket.id].color] = false 
         delete players[socket.id]
         io.emit("playersRefresh", players)
     })

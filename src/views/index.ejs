@@ -11,7 +11,7 @@
 <body>
     <section id="nickname_cnt">
         <form>
-            <input type="text" id="nickname" placeholder="Nickname">
+            <input type="text" id="nickname" placeholder="Nickname" >
             <button type="button" onclick="getNickname()">Enter</button>
         </form>
         <script src="/js/main.js"></script>
@@ -27,11 +27,13 @@
     <!-- 
         create this when main.js is loaded
     -->
-    <ul id="connected"></ul>
-    <div id="win_msg_cnt">
-        <div id="win_msg"></div>
-        <button>Ok</button>
-    </div>
-    <button id="ready_btn" onclick="ready()">Ready</button>
+    <section id="game">
+        <ol id="connected"></ol>
+        <div id="win_msg_cnt">
+            <div id="win_msg"></div>
+            <button>Ok</button>
+        </div>
+        <button id="ready_btn" onclick="ready()">Ready</button>
+    </section>
 </body>
 </html>
