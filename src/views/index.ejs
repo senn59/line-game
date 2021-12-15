@@ -11,7 +11,7 @@
 <body>
     <section id="nickname_cnt">
         <form>
-            <input type="text" id="nickname" placeholder="Nickname" >
+            <input type="text" id="nickname" placeholder="Nickname" value="nickname">
             <button type="button" onclick="getNickname()">Enter</button>
         </form>
         <script src="/js/main.js"></script>
@@ -29,6 +29,9 @@
     -->
     <section id="game">
         <ol id="connected"></ol>
+        <div id="countdown_cnt">
+            <div id="countdown">Ready</div>
+        </div>
         <div id="win_msg_cnt">
             <div id="win_msg"></div>
             <button>Ok</button>

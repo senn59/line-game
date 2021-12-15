@@ -72,11 +72,21 @@ socket.on("coords", (msg) => {
     opponents[msg.socketID].line.updatePos(msg.x, msg.y)
 })
 socket.on("countdown", (msg) => {
+    let countdownWord = {
+        2: "Ready",
+        1: "Set",
+        0: "GO"
+    }
+    document.getElementById("countdown_cnt").style.display = "flex"
+    document.getElementById("countdown").innerHTML = countdownWord[msg.count]
     if (msg.count == 0) {
         startLoop()
         document.getElementById("ready_btn").style.display = "none"
         player.ready = false;
         socket.emit("ready", {status: false})
+        setTimeout(() => {
+            document.getElementById("countdown_cnt").style.display = "none"
+        }, 400);
     }
 })
 //if the game is over you stop the game and showcase the winner

@@ -27,3 +27,5 @@ function joinRoom(code){
     gameScript.onload = () => document.getElementById("lobby_options").style.display = "none"
     document.body.appendChild(gameScript)
 }
+getNickname()
+createRoom()
