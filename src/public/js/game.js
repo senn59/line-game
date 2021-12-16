@@ -7,7 +7,6 @@ let gameDimensions = 400;
 let keycodes = [37,38,39,40]
 var playing; 
 var socket = io();
-let socketID;
 let opponents = {};
 let playerList = []
 let testx = 5
@@ -19,9 +18,9 @@ const ready = () => {
     //true false switch in order to decide the player ready status
     player.ready ? player.ready = false : player.ready = true;
     socket.emit("ready", {status: player.ready})
-    console.log(player.ready)
     document.getElementById(socket.id).innerHTML = player.nickname + " | " + player.ready
 }
+console.log(socket.id)
 
 socket.on("playerDC", (msg) => {
     /*
@@ -48,6 +47,7 @@ socket.on("playerInfo", (msg) => {
 //list of opponents that all clients recieve.
 //based on this list they create new lines for the new opponents which is different for each client
 socket.on("playersRefresh", (msg) => {
+    console.log("**")
     delete msg[socket.id]
     for ([key, val] of Object.entries(msg)){
         if (key in opponents) continue // continue to the next loop if the player is already registered
@@ -90,10 +90,35 @@ socket.on("countdown", (msg) => {
     }
 })
 //if the game is over you stop the game and showcase the winner
+socket.on("newRound", (msg) => {
+    delete msg[socket.id]
+    for ([key, val] of Object.entries(msg)){
+        if (key in opponents) continue // continue to the next loop if the player is already registered
+        opponents[key] = val // all the values of the player (color, id, start coords)
+        opponents[key].line = new baseLine(opponents[key].color, opponents[key].nickname)
+        opponents[key].line.updatePos(opponents[key].startx, opponents[key].starty)
+    }
+})
+function restartGame(){
+    //clear winner
+    document.getElementById("win_msg").innerHTML = ""
+    //clear playingfield 
+    player.ctx.clearRect(0,0, gameDimensions, gameDimensions)
+    //randomly respawn the players
+    player.restart()
+    //reset playerlist
+    opponents = {}
+    socket.emit("refresh") // alerts backend that the player is ready for the new round | if all players are ready for the new round the playerlist gets refreshed
+    //make the ready button visible
+    document.getElementById("ready_btn").style.display = "block"
+}
 // TODO: implementing rounds // for now infinite rounds
-socket.on("gameOver", (msg) => {
+socket.on("roundOver", (msg) => {
     stopLoop();
-    document.getElementById("win_msg_cnt").innerHTML = msg.winner
+    //showcase winner
+    document.getElementById("win_msg").innerHTML = `${msg.winner} has won!`
+    //restart game
+    setTimeout(restartGame, 1000)
 })
 //record keys
 document.addEventListener("keydown", e => {if (keycodes.includes(e.keyCode)) key = e.keyCode});
@@ -161,14 +186,13 @@ class Line extends baseLine {
         if (futurePos[1] > gameDimensions || futurePos[1] < 0) this.dead = true
     }
     restart(){
-        this.ctx.clearRect(0, 0, gameDimensions, gameDimensions);
         this.dead = false;
         this.generatePos()
         this.update()
-        socket.emit("startingCoords", {startx: player.x, starty: player.y})
+        console.log(this.x, this.y)
+        socket.emit("updateStartCoords", {startx: this.x, starty: this.y}) 
     }
     update(){
-        console.log(this.dead)
         if (this.dead){
             socket.emit("dead")
             stopLoop()

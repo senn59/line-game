@@ -63,7 +63,8 @@ io.on("connection", (socket) => {
     players[socket.id] = {
         color: getColor(),
         ready: false,
-        dead: false
+        dead: false,
+        refreshed: false
     }
     //send the playerinfo generated from the backend to the player that connected
     socket.emit("playerInfo", players[socket.id])
@@ -74,6 +75,18 @@ io.on("connection", (socket) => {
         players[socket.id].starty = msg.starty
         //send list of players to everyone
         io.emit("playersRefresh", players)
+    })
+    //game restart sockets
+    socket.on("refresh", () =>{
+        players[socket.id].refreshed = true
+        if (Object.values(players).every(val => val.refreshed)){
+            io.emit("newRound", players)
+            Object.values(players).forEach(player => player.refreshed = false);
+        }
+    }) 
+    socket.on("updateStartCoords", (msg) => {
+        players[socket.id].startx = msg.startx
+        players[socket.id].starty = msg.starty
     })
     //handle ready player
     socket.on("ready", (msg) => {
@@ -106,12 +119,12 @@ io.on("connection", (socket) => {
         console.log(deathcount, Object.keys(players).length)
         if (Object.keys(players).length - deathcount <= 1){
             for ([key, val] of Object.entries(players)){
-                if (!val.dead) winner = key
+                if (!val.dead) winner = val.nickname
             }
-            //deathcount = 0
-            console.log("Game over")
+            deathcount = 0
+            console.log("roundOver")
             playing = false
-            io.emit("gameOver", {winner: winner})
+            io.emit("roundOver", {winner: winner})
         }
     })
     //coords handler 
@@ -123,7 +136,7 @@ io.on("connection", (socket) => {
         socket.broadcast.emit("playerDC", {socketID: socket.id})
         colors[players[socket.id].color] = false 
         delete players[socket.id]
-        io.emit("playersRefresh", players)
+        io.emit("playersRefresh", players) //might not be needed!!
     })
 })
 //log requests

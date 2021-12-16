@@ -29,3 +29,4 @@ function joinRoom(code){
 }
 getNickname()
 createRoom()
+//TO DO: change window title based on whether you are choosing a nickname, creating a game, in a lobby

@@ -46,7 +46,7 @@ canvas {
     display: none;
 }
 #win_msg_cnt{
-    display: none;
+    display: block;
 }
 #countdown_cnt {
     height: 100vh;
