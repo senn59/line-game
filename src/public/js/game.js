@@ -13,12 +13,11 @@ let testx = 5
 let player2_x, player2_y
 let readyStatus= false
 let webWorker
-
 const ready = () => {
     //true false switch in order to decide the player ready status
     player.ready ? player.ready = false : player.ready = true;
+    player.ready ? document.getElementById(socket.id).innerHTML = `[READY] ${player.nickname}` : document.getElementById(socket.id).innerHTML = player.nickname
     socket.emit("ready", {status: player.ready})
-    document.getElementById(socket.id).innerHTML = player.nickname + " | " + player.ready
 }
 console.log(socket.id)
 
@@ -65,7 +64,7 @@ socket.on("playersRefresh", (msg) => {
 //change opponent ready status
 socket.on("playerReady", (msg) => {
     opponents[msg.socketID].ready = msg.ready
-    document.getElementById(msg.socketID).innerHTML = opponents[msg.socketID].nickname + " | " + msg.ready
+    msg.ready ? document.getElementById(msg.socketID).innerHTML = `[READY] ${opponents[msg.socketID].nickname}` : document.getElementById(opponents[msg.socketID].id).innerHTML = opponents[msg.socketID].nickname
 })
 //update the player coordinates
 socket.on("coords", (msg) => {
@@ -83,6 +82,11 @@ socket.on("countdown", (msg) => {
         startLoop()
         document.getElementById("ready_btn").style.display = "none"
         player.ready = false;
+        document.getElementById(socket.id).innerHTML = player.nickname
+        let items = document.getElementById("connected").getElementsByTagName("li");
+        for (i=1; i < items.length; i++){
+            items[i].innerHTML = opponents[items[i].id].nickname
+        }
         socket.emit("ready", {status: false})
         setTimeout(() => {
             document.getElementById("countdown_cnt").style.display = "none"
