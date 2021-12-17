@@ -64,7 +64,7 @@ socket.on("playersRefresh", (msg) => {
 //change opponent ready status
 socket.on("playerReady", (msg) => {
     opponents[msg.socketID].ready = msg.ready
-    msg.ready ? document.getElementById(msg.socketID).innerHTML = `[READY] ${opponents[msg.socketID].nickname}` : document.getElementById(opponents[msg.socketID].id).innerHTML = opponents[msg.socketID].nickname
+    msg.ready ? document.getElementById(msg.socketID).innerHTML = `[READY] ${opponents[msg.socketID].nickname}` : document.getElementById(opponents[msg.socketID].nickname).innerHTML = opponents[msg.socketID].nickname
 })
 //update the player coordinates
 socket.on("coords", (msg) => {

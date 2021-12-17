@@ -3,6 +3,7 @@ function getNickname() {
     const nickname = document.getElementById("nickname").value;
     //remove the prompt since it is no longer needed
     document.getElementById("nickname_cnt").style.display = "none"
+    createRoom()
 }
 function createRoom(){
     //generate random ~6 character code 
@@ -28,5 +29,4 @@ function joinRoom(code){
     document.body.appendChild(gameScript)
 }
 getNickname()
-createRoom()
 //TO DO: change window title based on whether you are choosing a nickname, creating a game, in a lobby
