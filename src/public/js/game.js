@@ -3,7 +3,7 @@ let playerlistDisplay = document.getElementById("connected")
 //init variables
 let player;
 let key;
-let gameDimensions = 400;
+let gameDimensions = 700;
 let keycodes = [37,38,39,40]
 var playing; 
 var socket = io();
@@ -11,8 +11,10 @@ let opponents = {};
 let playerList = []
 let testx = 5
 let player2_x, player2_y
-let readyStatus= false
-let webWorker
+let readyStatus= false;
+let webWorker;
+let continueTimer;
+let winner
 const ready = () => {
     //true false switch in order to decide the player ready status
     player.ready ? player.ready = false : player.ready = true;
@@ -103,9 +105,7 @@ socket.on("newRound", (msg) => {
         opponents[key].line.updatePos(opponents[key].startx, opponents[key].starty)
     }
 })
-function restartGame(){
-    //clear winner
-    document.getElementById("win_msg").innerHTML = ""
+socket.on("restartGame", () => {
     //clear playingfield 
     player.ctx.clearRect(0,0, gameDimensions, gameDimensions)
     //randomly respawn the players
@@ -115,14 +115,29 @@ function restartGame(){
     socket.emit("refresh") // alerts backend that the player is ready for the new round | if all players are ready for the new round the playerlist gets refreshed
     //make the ready button visible
     document.getElementById("ready_btn").style.display = "block"
-}
+})
 // TODO: implementing rounds // for now infinite rounds
 socket.on("roundOver", (msg) => {
     stopLoop();
-    //showcase winner
+    //update winner and show win screen
+    winner = msg.winner
     document.getElementById("win_msg").innerHTML = `${msg.winner} has won!`
-    //restart game
-    setTimeout(restartGame, 1000)
+    document.getElementById("win_msg_cnt").style.display = "flex"
+    //continue countdown
+    let countdown = 4
+    document.getElementById("continue_btn").innerHTML = `Continue (${countdown})`
+    countdown--
+    //set interval
+    continueTimer = setInterval(() => {
+        document.getElementById("continue_btn").innerHTML = `Continue (${countdown})`
+        console.log(countdown)
+        if (countdown == 0){
+            console.log("proceed")
+            clearInterval(continueTimer)
+            proceed()
+        }
+        countdown--
+    }, 1000);
 })
 //record keys
 document.addEventListener("keydown", e => {if (keycodes.includes(e.keyCode)) key = e.keyCode});
@@ -219,7 +234,7 @@ let playField = {
         this.canvas.width = gameDimensions;
         this.canvas.height = gameDimensions;
         this.context = this.canvas.getContext("2d");
-        document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+        document.getElementById("gameRightSide").appendChild(this.canvas);
     }
 }
 playField.start()

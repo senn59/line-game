@@ -28,5 +28,16 @@ function joinRoom(code){
     gameScript.onload = () => document.getElementById("lobby_options").style.display = "none"
     document.body.appendChild(gameScript)
 }
-getNickname()
-//TO DO: change window title based on whether you are choosing a nickname, creating a game, in a lobby
+
+function proceed() {
+    //clear the timer if the function is called before the timer ends
+    clearInterval(continueTimer);
+    //hide the winner screen
+    document.getElementById("win_msg_cnt").style.display = "none"
+    //show last winner
+    document.getElementById("last_winner").style.display = "block"
+    document.getElementById("winner").innerHTML = winner
+    //tell the server you proceeded
+    socket.emit("proceed")
+}
+//TO DO: change window title based on what page your are on

@@ -11,42 +11,121 @@
 body {
     background: var(--BGcolor);
     height: 100vh;
-    
-    display: flex;
-    justify-content: center;
-    align-items: center;
 }
 canvas {
     border: 3px solid white;
     background: black;
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
 }
 #connected {
-    font-size: 18px;
-    position: absolute;
-    top: 50px;
-    left: 0px;
+    font-size: 30px;
+    width: 400px;
     counter-reset: item;
     list-style: none;
     color: white;
 }
 #connected li {
     counter-increment: item;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
 }
 #connected li::before {
     content: counter(item);
     margin-right: 10px;
+    width: 40px;
+    height: 40px;
     background: var(--background);
     color: black;
-    width: 25px;
     text-align: center;
     display: inline-block;
 }
-#restart_btn {
-    display: none;
+#game {
+    display: flex;
+    align-items: center;
 }
+#gameLeftSide_cnt {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 300px;
+    height: 65vh;
+    padding: 10px;
+}
+#gameLeftSide {
+    display: flex;
+    align-items: center;
+    height: 100vh;
+}
+#gameRightSide {
+    display: flex;
+    align-items: center;
+    height: 100vh;
+}
+#ready_btn_cnt {
+    height: 700px;
+    width: 270px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+}
+#ready_btn {
+    background: #6ED16E;
+    outline: none;
+    border: none;
+    width: fit-content;
+    padding: 12px;
+    font-size: 24px;
+    font-weight: 600;
+    box-shadow: none;
+}
+#last_winner {
+    color: white;
+    position: absolute;
+    left: 32%;
+    font-size: 18px;
+    width: 300px;
+    top: 30px;
+}
+
 #win_msg_cnt{
-    display: block;
+    position: fixed;
+    height: 100vh;
+    width: 100vw;
+    z-index: 3;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+#win_cnt {
+    height: 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: flex-end;
+}
+#continue_btn {
+    outline: none;
+    border: none;
+    box-shadow: none;
+    padding: 5px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+}
+#continue_btn:hover {
+    background: #2AB2F5;
+    color: white;
+}
+#winner {
+    font-weight: 600;
+}
+#win_msg {
+    color: white;
+    opacity: 1;
+    font-size: 30px;
 }
 #countdown_cnt {
     height: 100vh;

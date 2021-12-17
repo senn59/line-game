@@ -14,7 +14,6 @@
             <input type="text" id="nickname" placeholder="Nickname" value="Nickname">
             <button type="button" onclick="getNickname()">Enter</button>
         </form>
-        <script src="/js/main.js"></script>
     </section>
 
     <section id="lobby_options">
@@ -28,14 +27,30 @@
         create this when main.js is loaded
     -->
     <section id="game">
-        <ol id="connected"></ol>
+        <div id="gameLeftSide">
+            <div id="gameLeftSide_cnt">
+                <ol id="connected"></ol>
+                </div>
+            </div>
+        </div>
+        <div id="gameRightSide">
+            <div id="last_winner">Last winner: <span id="winner"></span></div>
+            <div id="ready_btn_cnt">
+                <button id="ready_btn" onclick="ready()">Ready</button>
+            </div>
+        </div>
+
         <div id="countdown_cnt">
             <div id="countdown">Ready</div>
         </div>
         <div id="win_msg_cnt">
-            <div id="win_msg"></div>
+            <div id="win_cnt">
+                <div id="win_msg"><span id="winner">Nickname</span> has won!</div>
+                <button id="continue_btn" onclick="proceed()">Continue</button>
+            </div>
         </div>
-        <button id="ready_btn" onclick="ready()">Ready</button>
     </section>
+    
+    <script src="/js/main.js"></script>
 </body>
 </html>

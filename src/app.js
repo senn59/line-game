@@ -64,7 +64,8 @@ io.on("connection", (socket) => {
         color: getColor(),
         ready: false,
         dead: false,
-        refreshed: false
+        refreshed: false,
+        proceeded: false
     }
     //send the playerinfo generated from the backend to the player that connected
     socket.emit("playerInfo", players[socket.id])
@@ -125,6 +126,13 @@ io.on("connection", (socket) => {
             console.log("roundOver")
             playing = false
             io.emit("roundOver", {winner: winner})
+        }
+    })
+    socket.on("proceed", () => {
+        players[socket.id].proceeded = true;
+        if (Object.values(players).every(player => player.proceeded)) {
+            io.emit("restartGame")
+            Object.values(players).forEach(player => player.proceeded = false);
         }
     })
     //coords handler 
