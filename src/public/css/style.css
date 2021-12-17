@@ -42,7 +42,7 @@ canvas {
     display: inline-block;
 }
 #game {
-    display: flex;
+    display: none;
     align-items: center;
 }
 #gameLeftSide_cnt {
@@ -167,6 +167,9 @@ canvas {
 #nickname_cnt button {
     cursor: pointer;
 }
-#nickname_cnt form {
+#input_cnt{
     display: flex;
+}
+#input_cnt button {
+    background: #2AB2F5;
 }

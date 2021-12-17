@@ -31,18 +31,18 @@ app.get('/:roomcode', (req, res, next) => {
 //sockets
 let players = {};
 let colors = {
-    red: false,
-    yellow: false,
-    blue: false,
-    green: false,
-    cyan: false
+    red: {taken: false, hexcode: "#FF6464"},
+    yellow: {taken: false, hexcode: "#FFFF64"},
+    blue: {taken: false, hexcode: "#0066FF"},
+    green: {taken: false, hexcode: "#64FF64"},
+    cyan: {taken: false, hexcode: "#64FFFF"}
 }
 function getColor(){
     //pick a color that isnt taken and return that color
     for ([key, val] of Object.entries(colors)){
-        if (!val){
-            colors[key] = true
-            return key
+        if (!val.taken){
+            val.taken = true
+            return val.hexcode
         }
     }
 }

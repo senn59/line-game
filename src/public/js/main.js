@@ -5,6 +5,14 @@ function getNickname() {
     document.getElementById("nickname_cnt").style.display = "none"
     createRoom()
 }
+//press enter in text field
+let input = document.getElementById("nickname")
+input.addEventListener("keyup", (event) => {
+    if (event.keyCode == 13){
+        event.preventDefault;
+        document.getElementById("nickname_btn").click();
+    }
+})
 function createRoom(){
     //generate random ~6 character code 
     const codeLength = 6
@@ -25,7 +33,10 @@ function joinRoom(code){
     let gameScript = document.createElement("script")
     gameScript.src = "/js/game.js"
     //delete lobby options
-    gameScript.onload = () => document.getElementById("lobby_options").style.display = "none"
+    gameScript.onload = () => {
+        document.getElementById("lobby_options").style.display = "none"
+        document.getElementById("game").style.display = "flex"
+    }
     document.body.appendChild(gameScript)
 }
 
