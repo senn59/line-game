@@ -1,9 +1,9 @@
+var socket = io();
 function getNickname() {
     //extract value from input
     const nickname = document.getElementById("nickname").value;
     //remove the prompt since it is no longer needed
     document.getElementById("nickname_cnt").style.display = "none"
-    createRoom()
 }
 //press enter in text field
 let input = document.getElementById("nickname")
@@ -22,7 +22,7 @@ function createRoom(){
         code += chars.charAt(Math.floor(Math.random() * chars.length))
     }
     //send create room command with room code to backend
-
+    socket.emit("createRoom", {code: code})
     //join the room you just created
     joinRoom(code)
 }
@@ -36,6 +36,9 @@ function joinRoom(code){
     gameScript.onload = () => {
         document.getElementById("lobby_options").style.display = "none"
         document.getElementById("game").style.display = "flex"
+        //send room code to backend
+        console.log("loaded")
+        socket.emit("joinRoom", {code: code})
     }
     document.body.appendChild(gameScript)
 }

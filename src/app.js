@@ -29,7 +29,6 @@ app.get('/:roomcode', (req, res, next) => {
     res.render("index")
 })
 //sockets
-let players = {};
 let colors = {
     red: {taken: false, hexcode: "#FF6464"},
     yellow: {taken: false, hexcode: "#FFFF64"},
@@ -37,6 +36,7 @@ let colors = {
     green: {taken: false, hexcode: "#64FF64"},
     cyan: {taken: false, hexcode: "#64FFFF"}
 }
+let rooms = {}
 function getColor(){
     //pick a color that isnt taken and return that color
     for ([key, val] of Object.entries(colors)){
@@ -47,6 +47,33 @@ function getColor(){
     }
 }
 io.on("connection", (socket) => {
+    let room;
+    let player
+    socket.on("createRoom", (msg) => {
+        if (!rooms.hasOwnProperty(msg.code)){
+            rooms[msg.code] = {
+                colors: colors,
+                players: {}
+            }
+        }
+    })
+    socket.on("joinRoom", (msg) => {
+        if (!rooms.hasOwnProperty(msg.code)) return
+        room = msg.code
+        socket.join(room)
+        //init player object
+        rooms[room].players[socket.id] = {
+            color: getColor(),
+            ready: false,
+            dead: false,
+            refreshed: false,
+            proceeded: false
+        }
+        player = rooms[room]["players"][socket.id]
+        console.log(player)
+        //send the playerinfo generated from the backend to the player that connected
+        socket.emit("playerInfo", player)
+    })
     //do nothing if a game is currently in progress
     if (playing) {
         /* TO DO: send person back to lobby OR let them spectate and
@@ -59,41 +86,31 @@ io.on("connection", (socket) => {
         clearInterval(timer)
         countdown = 2
     } 
-    //init player object
-    players[socket.id] = {
-        color: getColor(),
-        ready: false,
-        dead: false,
-        refreshed: false,
-        proceeded: false
-    }
-    //send the playerinfo generated from the backend to the player that connected
-    socket.emit("playerInfo", players[socket.id])
     socket.on("playerClientInfo", (msg) => {
         //get starting coords & player nickname
-        players[socket.id].nickname = msg.nickname
-        players[socket.id].startx = msg.startx
-        players[socket.id].starty = msg.starty
+        player.nickname = msg.nickname
+        player.startx = msg.startx
+        player.starty = msg.starty
         //send list of players to everyone
-        io.emit("playersRefresh", players)
+        io.to(room).emit("playersRefresh", rooms[room].players)
     })
     //game restart sockets
     socket.on("refresh", () =>{
-        players[socket.id].refreshed = true
+        player.refreshed = true
         if (Object.values(players).every(val => val.refreshed)){
-            io.emit("newRound", players)
+            io.to(room).emit("newRound", rooms[room].players)
             Object.values(players).forEach(player => player.refreshed = false);
         }
     }) 
     socket.on("updateStartCoords", (msg) => {
-        players[socket.id].startx = msg.startx
-        players[socket.id].starty = msg.starty
+        player.startx = msg.startx
+        player.starty = msg.starty
     })
     //handle ready player
     socket.on("ready", (msg) => {
         //change ready status
-        players[socket.id].ready = msg.status
-        socket.broadcast.emit("playerReady", {ready: players[socket.id].ready, socketID: socket.id})
+        player.ready = msg.status
+        socket.broadcast.to(room).emit("playerReady", {ready: player.ready, socketID: socket.id})
         //reset the timer if someone changes their ready status while a countdown is in progress
         if (timer) {
             clearInterval(timer)
@@ -103,7 +120,7 @@ io.on("connection", (socket) => {
         if (Object.values(players).every(val => val.ready)){
             console.log("Countdown started!")
             timer = setInterval(() => {
-                io.emit("countdown", {count: countdown})
+                io.to(room).emit("countdown", {count: countdown})
                 console.log(countdown)
                 countdown--
                 if (countdown < 0) {
@@ -115,7 +132,7 @@ io.on("connection", (socket) => {
     })
     //If a player dies update the serverside playerlist
     socket.on("dead", () => {
-        players[socket.id].dead = true;
+        player.dead = true;
         deathcount++;
         console.log(deathcount, Object.keys(players).length)
         if (Object.keys(players).length - deathcount <= 1){
@@ -125,26 +142,26 @@ io.on("connection", (socket) => {
             deathcount = 0
             console.log("roundOver")
             playing = false
-            io.emit("roundOver", {winner: winner})
+            io.to(room).emit("roundOver", {winner: winner})
         }
     })
     socket.on("proceed", () => {
-        players[socket.id].proceeded = true;
+        player.proceeded = true;
         if (Object.values(players).every(player => player.proceeded)) {
-            io.emit("restartGame")
+            io.to(room).emit("restartGame")
             Object.values(players).forEach(player => player.proceeded = false);
         }
     })
     //coords handler 
     socket.on("coords", (msg) => {
-        socket.broadcast.emit("coords", {socketID: socket.id, x: msg.x, y: msg.y})
+        socket.broadcast.to(room).emit("coords", {socketID: socket.id, x: msg.x, y: msg.y})
     })
     //disconnect handler
     socket.on("disconnect", () => {
-        socket.broadcast.emit("playerDC", {socketID: socket.id})
-        colors[players[socket.id].color] = false 
-        delete players[socket.id]
-        io.emit("playersRefresh", players) //might not be needed!!
+        socket.broadcast.to(room).emit("playerDC", {socketID: socket.id})
+        rooms[room]["colors"][player.color] = false
+        delete rooms[room]["players"][socket.id]
+        io.to(room).emit("playersRefresh", rooms[room].players) //might not be needed!!
     })
 })
 //log requests

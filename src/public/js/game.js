@@ -6,7 +6,6 @@ let key;
 let gameDimensions = 700;
 let keycodes = [37,38,39,40]
 var playing; 
-var socket = io();
 let opponents = {};
 let playerList = []
 let testx = 5
@@ -198,9 +197,10 @@ class Line extends baseLine {
         let futurePos = this.getNextPos(this.x, this.y);
         futurePos = this.getNextPos(futurePos[0], futurePos[1]);
         //get the image data of said position and check its color
-        let imageData = this.ctx.getImageData(futurePos[0],futurePos[1],1,1).data;
+        let imageData = this.ctx.getImageData(futurePos[0],futurePos[1],1,2).data;
+        console.log(imageData)
         //check if color alpa is 255
-        if (imageData[3] == 255) this.dead = true
+        if (imageData[3] == 255 || imageData[7] == 255) this.dead = true
         if (futurePos[0] > gameDimensions || futurePos[0] < 0) this.dead = true
         if (futurePos[1] > gameDimensions || futurePos[1] < 0) this.dead = true
     }
