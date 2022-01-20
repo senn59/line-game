@@ -27,6 +27,7 @@ function createRoom(){
     joinRoom(code)
 }
 function joinRoom(code){
+    if (!code) code = document.getElementById("roomcode").value;
     //change url to /roomcode
     window.history.pushState("", "", `/${code}`) 
     //load game.js

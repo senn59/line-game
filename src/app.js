@@ -37,9 +37,9 @@ let colors = {
     cyan: {taken: false, hexcode: "#64FFFF"}
 }
 let rooms = {}
-function getColor(){
+function getColor(room){
     //pick a color that isnt taken and return that color
-    for ([key, val] of Object.entries(colors)){
+    for ([key, val] of Object.entries(rooms[room].colors)){
         if (!val.taken){
             val.taken = true
             return val.hexcode
@@ -63,14 +63,13 @@ io.on("connection", (socket) => {
         socket.join(room)
         //init player object
         rooms[room].players[socket.id] = {
-            color: getColor(),
+            color: getColor(room),
             ready: false,
             dead: false,
             refreshed: false,
             proceeded: false
         }
         player = rooms[room]["players"][socket.id]
-        console.log(player)
         //send the playerinfo generated from the backend to the player that connected
         socket.emit("playerInfo", player)
     })
@@ -97,9 +96,9 @@ io.on("connection", (socket) => {
     //game restart sockets
     socket.on("refresh", () =>{
         player.refreshed = true
-        if (Object.values(players).every(val => val.refreshed)){
+        if (Object.values(rooms[room]["players"]).every(val => val.refreshed)){
             io.to(room).emit("newRound", rooms[room].players)
-            Object.values(players).forEach(player => player.refreshed = false);
+            Object.values(rooms[room]["players"]).forEach(player => player.refreshed = false);
         }
     }) 
     socket.on("updateStartCoords", (msg) => {
@@ -117,7 +116,7 @@ io.on("connection", (socket) => {
             countdown = 2
         }
         
-        if (Object.values(players).every(val => val.ready)){
+        if (Object.values(rooms[room]["players"]).every(val => val.ready)){
             console.log("Countdown started!")
             timer = setInterval(() => {
                 io.to(room).emit("countdown", {count: countdown})
@@ -134,9 +133,9 @@ io.on("connection", (socket) => {
     socket.on("dead", () => {
         player.dead = true;
         deathcount++;
-        console.log(deathcount, Object.keys(players).length)
-        if (Object.keys(players).length - deathcount <= 1){
-            for ([key, val] of Object.entries(players)){
+        console.log(deathcount, Object.keys(rooms[room]["players"]).length)
+        if (Object.keys(rooms[room]["players"]).length - deathcount <= 1){
+            for ([key, val] of Object.entries(rooms[room]["players"])){
                 if (!val.dead) winner = val.nickname
             }
             deathcount = 0
@@ -147,9 +146,9 @@ io.on("connection", (socket) => {
     })
     socket.on("proceed", () => {
         player.proceeded = true;
-        if (Object.values(players).every(player => player.proceeded)) {
+        if (Object.values(rooms[room]["players"]).every(player => player.proceeded)) {
             io.to(room).emit("restartGame")
-            Object.values(players).forEach(player => player.proceeded = false);
+            Object.values(rooms[room]["players"]).forEach(player => player.proceeded = false);
         }
     })
     //coords handler 
@@ -176,7 +175,7 @@ function logger(req, res, next){
     next()
 }
 //Start app
-server.listen(port, ips[1],  () => {
-    console.log(`listening at http://${ips[1]}:${port}`)
+server.listen(port, ips[0],  () => {
+    console.log(`listening at http://${ips[0]}:${port}`)
 })
 
